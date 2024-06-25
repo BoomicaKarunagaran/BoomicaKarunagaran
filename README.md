@@ -1,3 +1,4 @@
+DEMO VIDEO:https://screenrec.com/share/av5GnrI0cm
 Overview:
 This is the YouTube Data Harvesting and Warehousing Project which aims to extract data from a specific YouTube channel by using its Channel ID and store the extracted data in a SQL database. This is my intermediate level Python Project to harvest YouTube data using YouTube Data API and store the data in a SQL database as a data lake. After that the data is migrated from the data lake to a SQL database as tables and are displayed in the streamlit application. The main objective is to facilitate data analysis and reporting by systematically organizing and storing the channel's data. This project will demonstrate how to harvest and warehouse YouTube data using SQL, and Streamlit.
 
@@ -46,6 +47,4 @@ TECHNOLOGIES USED:
 [YouTube Data API]
 (https://developers.google.com/youtube/v3)
 [Streamlit](https://docs.streamlit.io/library/api-reference)
-
-DEMO VIDEO:https://screenrec.com/share/av5GnrI0cm
 
