@@ -5,7 +5,7 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime,timedelta
 import json
-#SQL connection
+#MYSQL connection
 
 mydb = mysql.connector.connect(
     host="localhost",
@@ -27,7 +27,7 @@ def Api_connect():
     return youtube
 
 utube_call = Api_connect()
-#Get Channel Information
+#Fetching the Channel Information:
 
 def Channel_Info(channel_id):
 
@@ -63,7 +63,7 @@ def Channel_Info(channel_id):
         mydb.commit()
     return details
 
-#Get Video Id
+#Fetching the  Video Id:
 
 def Get_Video_Id(video_id):
     Video_ID=[]
@@ -89,7 +89,7 @@ def Get_Video_Id(video_id):
       
     return Video_ID
 
-#Get Video Details
+# Fetching the Video Details:
 
 def parse_duration(duration_str):
     try:
@@ -161,7 +161,7 @@ def Get_Video_Details(Video_id):
 
         mydb.commit()        
     return Video_List
-#Get Comment Details
+#Fecthing the Comment Details:
 
 def get_comment_Details(get_Comment):
     comment_List=[]
@@ -203,7 +203,7 @@ def get_comment_Details(get_Comment):
          
     return comment_List
 
-#get_playlist_details
+#Fetching_playlist_details:
 
 
 def get_playlist_details(channel_id):
@@ -252,7 +252,7 @@ def get_playlist_details(channel_id):
         print(f"Error: {e}")
 
     return Playlist_Data
-#Overall Function get detils
+#Overall Function get detils:
 
 def fetch_all_data(channel_id):
     channel_info = Channel_Info(channel_id)
@@ -276,7 +276,7 @@ def fetch_all_data(channel_id):
         "video_data": video_detail_df
     }
 
-# Main function
+# Main function:
 def main():
     
     st.sidebar.header('Menu')
