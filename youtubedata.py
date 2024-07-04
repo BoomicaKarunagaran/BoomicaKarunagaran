@@ -5,7 +5,8 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime,timedelta
 import json
-#MYSQL connection
+
+#MYSQL connection:
 
 mydb = mysql.connector.connect(
     host="localhost",
@@ -16,7 +17,8 @@ mydb = mysql.connector.connect(
 )
 
 cursor = mydb.cursor()
-#Api key connection
+
+#Api key connection:
 
 def Api_connect():
     api_key = "AIzaSyAvFAyaQCLZH7oA7h6iio_js7RpZXq8fTA"
@@ -27,6 +29,7 @@ def Api_connect():
     return youtube
 
 utube_call = Api_connect()
+
 #Fetching the Channel Information:
 
 def Channel_Info(channel_id):
@@ -161,6 +164,7 @@ def Get_Video_Details(Video_id):
 
         mydb.commit()        
     return Video_List
+    
 #Fecthing the Comment Details:
 
 def get_comment_Details(get_Comment):
@@ -252,6 +256,7 @@ def get_playlist_details(channel_id):
         print(f"Error: {e}")
 
     return Playlist_Data
+    
 #Overall Function get detils:
 
 def fetch_all_data(channel_id):
@@ -261,7 +266,7 @@ def fetch_all_data(channel_id):
     video_details = Get_Video_Details(video_id)
     comment_details = get_comment_Details(video_id)
 
-# Convert dictionaries to DataFrames
+# Convert dictionaries to DataFrames:
     channel_df = pd.DataFrame([channel_info])
     video_df = pd.DataFrame(video_id)
     playlist_df = pd.DataFrame(playlist_details)
