@@ -18,6 +18,7 @@ mydb = mysql.connector.connect(
 
 cursor = mydb.cursor()
 
+
 #Api key connection:
 
 def Api_connect():
@@ -60,13 +61,13 @@ def Channel_Info(channel_id):
             Playlist_Id=item['contentDetails']['relatedPlaylists']['uploads']
         )
     
-        cursor.execute("INSERT INTO channel_info (channel_name, channel_id, subscribe, views, total_videos, channel_description, playlist_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+        cursor.execute("INSERT IGNORE INTO channel_info (channel_name, channel_id, subscribe, views, total_videos, channel_description, playlist_id) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                        (details['Channel_Name'], details['Channel_Id'], details['Subscribers'], details['Views'], details['Total_Videos'], details['Channel_Description'], details['Playlist_Id']))
         
         mydb.commit()
     return details
 
-#Fetching the  Video Id:
+#Fetching the Video Id:
 
 def Get_Video_Id(video_id):
     Video_ID=[]
@@ -92,7 +93,7 @@ def Get_Video_Id(video_id):
       
     return Video_ID
 
-# Fetching the Video Details:
+#Fetching the Video Details:
 
 def parse_duration(duration_str):
     try:
@@ -159,13 +160,13 @@ def Get_Video_Details(Video_id):
             parsed_datetime = datetime.fromisoformat(iso_datetime.replace('Z', '+00:00'))
             mysql_published_date = parsed_datetime.strftime('%Y-%m-%d %H:%M:%S')
 
-        cursor.execute("INSERT INTO video_details(channel_name, channel_id, video_id, title ,tags ,thumbnail , description, published_date, duration, views, likes, dislikes, comments) VALUES (%s, %s, %s, %s, %s, %s,  %s, %s, %s, %s,%s,%s,%s)",
+        cursor.execute("INSERT IGNORE INTO video_details(channel_name, channel_id, video_id, title ,tags ,thumbnail , description, published_date, duration, views, likes, dislikes, comments) VALUES (%s, %s, %s, %s, %s, %s,  %s, %s, %s, %s,%s,%s,%s)",
                (Data['channel_Name'], Data['Channel_Id'], Data['Video_Id'],Data['Title'],Data['Tags'], Data['Thumbnail'], Data['Description'],mysql_published_date, sql_duration, Data['Views'], Data['Likes'], Data['Dislikes'], Data['Comments']))
 
         mydb.commit()        
     return Video_List
-    
-#Fecthing the Comment Details:
+
+#Fetching the Comment Details:
 
 def get_comment_Details(get_Comment):
     comment_List=[]
@@ -198,7 +199,7 @@ def get_comment_Details(get_Comment):
                     parsed_datetime = datetime.fromisoformat(iso_datetime.replace('Z', '+00:00'))
                     mysql_published_dates = parsed_datetime.strftime('%Y-%m-%d %H:%M:%S')
 
-                    cursor.execute("INSERT INTO comment_details (comment_id, video_id, comment_text, author, published_date) VALUES (%s, %s, %s, %s,%s)",
+                    cursor.execute("INSERT IGNORE INTO comment_details (comment_id, video_id, comment_text, author, published_date) VALUES (%s, %s, %s, %s,%s)",
                                (Comment_Det['Comment_ID'], Comment_Det['Video_Id'], Comment_Det['Comment_Text'], Comment_Det['Author_Name'],mysql_published_dates))
                     mydb.commit()
                     
@@ -248,51 +249,95 @@ def get_playlist_details(channel_id):
         parsed_datetime = datetime.fromisoformat(iso_datetime.replace('Z', '+00:00'))
         mysql_published_datee = parsed_datetime.strftime('%Y-%m-%d %H:%M:%S')
 
-        # Insert data into MySQL
-        cursor.execute("INSERT INTO playlist_details (playlist_id, title, channel_id, published_date, video_count) VALUES (%s, %s, %s, %s, %s)",
+        # Insert data into MySQL:
+        cursor.execute("INSERT  IGNORE INTO playlist_details (playlist_id, title, channel_id, published_date, video_count) VALUES (%s, %s, %s, %s, %s)",
         (PlayList_Det['Playlist_Id'], PlayList_Det['Title'], PlayList_Det['Channel_Id'], mysql_published_datee, PlayList_Det['Video_Count']))
         mydb.commit()
     except Exception as e:
         print(f"Error: {e}")
 
     return Playlist_Data
-    
+
 #Overall Function get detils:
 
 def fetch_all_data(channel_id):
-    channel_info = Channel_Info(channel_id)
-    video_id=Get_Video_Id(channel_id)
-    playlist_details = get_playlist_details(channel_id)
-    video_details = Get_Video_Details(video_id)
-    comment_details = get_comment_Details(video_id)
+    try:
+        channel_info = Channel_Info(channel_id)
+        video_id=Get_Video_Id(channel_id)
+        playlist_details = get_playlist_details(channel_id)
+        video_details = Get_Video_Details(video_id)
+        comment_details = get_comment_Details(video_id)
 
 # Convert dictionaries to DataFrames:
-    channel_df = pd.DataFrame([channel_info])
-    video_df = pd.DataFrame(video_id)
-    playlist_df = pd.DataFrame(playlist_details)
-    video_detail_df = pd.DataFrame(video_details)
-    comment_df = pd.DataFrame(comment_details)
-    
+    finally:
+            channel_df = pd.DataFrame([channel_info])
+            video_df = pd.DataFrame(video_id)
+            playlist_df = pd.DataFrame(playlist_details)
+            video_detail_df = pd.DataFrame(video_details)
+            comment_df = pd.DataFrame(comment_details)
     return {
-        "channel_details": channel_df,
-        "video_details": video_df,
-        "comment_details": comment_df,
-        "playlist_details": playlist_df,
-        "video_data": video_detail_df
-    }
+            "channel_details": channel_df,
+            "video_details": video_df,
+            "comment_details": comment_df,
+            "playlist_details": playlist_df,
+            "video_data": video_detail_df
+        }
+   
+    return None
+
+# Update SQL statements:
+def clean_data(db_connection):
+    with db_connection.cursor() as cursor:
+        cursor.execute(
+            """
+            #Update Channel table
+            Update Channel 
+            SET Channel_name = COALESCE(NULLIF(Channel_name, ''), 'NA'),
+                Channel_Id = COALESCE(NULLIF(Channel_Id, ''), 'NA'),
+                Subscribes = COALESCE(NULLIF(Subscribes, ''), 0),
+                Views = COALESCE(NULLIF(Views, ''), 0),
+                Total_Videos = COALESCE(NULLIF(Total_Videos, ''), 0),
+                Channel_Description = COALESCE(NULLIF(Channel_description, ''), 'NA'),
+                Playlist_Id = COALESCE(NULLIF(Playlist_Id, ''), 'NA');
+
+                # Update Playlist table
+                UPDATE playlist
+                SET Title = COALESCE(NULLIF(Title, ''), 'NA');
+
+                # Update Comment_details table
+                UPDATE comment
+                SET Comment_Text = COALESCE(NULLIF(Comment_Text, ''), 'NA'),
+                    Author = COALESCE(NULLIF(Author, ''), 'NA');
+
+                # Update Video table
+                UPDATE Video
+                SET Title = COALESCE(NULLIF(Title, ''), 'NA'),
+                    Tags = COALESCE(NULLIF(Tags, ''), 'NA'),
+                    Thumbnail = COALESCE(NULLIF(Thumbnail, ''), 'NA'),
+                    Description = COALESCE(NULLIF(Description, ''), 'NA');
+        """
+        )
+    db_connection.commit()
+
 
 # Main function:
 def main():
-    
     st.sidebar.header('Menu')
-    option=st.sidebar.radio("Select Option",['Home','Queries'])
-    if option=="Home":
-            st.subheader(':orange[YOUTUBE-DATA-HARVESTING-AND-WAREHOUSING]', divider='blue')
-            channel_id = st.text_input("Enter Channel ID")
-            
-            if st.button("Get Channel Details"):
+    option = st.sidebar.radio("Select Option", ['Home','Update','Queries',])
+    
+    if option == "Home":
+        st.subheader('YOUTUBE-DATA-HARVESTING-AND-WAREHOUSING')
+        channel_id = st.text_input("Enter Channel ID")
+        
+        if st.button("Collect and Store Data"):
+            if channel_id: 
+                st.success('The channel_id already exists')
+
+
+                # Fetch all data for the channel_id
                 details = fetch_all_data(channel_id)
                 
+                # Display fetched data
                 st.subheader('Channel Details')
                 st.write(details["channel_details"])
 
@@ -304,9 +349,39 @@ def main():
 
                 st.subheader('Playlist Details')
                 st.write(details["playlist_details"])
-            
+
+       
+    if option =="Update":
+        st.subheader('Update')
+        channel_id = st.text_input("Enter the Youtube Channel Id to Collect and Store Data") 
+
+        if st.button("Update"):
+            if channel_id:
+                st.success("Data updated successfully")            
+
+
+                # Fetch all data for the channel_id
+                details = fetch_all_data(channel_id)
+                
+                # Display fetched data
+                st.subheader('Channel Details')
+                st.write(details["channel_details"])
+
+                st.subheader('Video Details')
+                st.write(details["video_data"])
+
+                st.subheader('Comment Details')
+                st.write(details["comment_details"])
+
+                st.subheader('Playlist Details')
+                st.write(details["playlist_details"])
+
+       
+
     elif option == "Queries":
         st.header("Queries")
+        # Add your code for handling queries here
+        pass  # Placeholder for handling queries
 
         questions = [
                    "1. What are the names of all the videos and their corresponding channels?",
@@ -320,7 +395,7 @@ def main():
                    "9. What is the average duration of all videos in each channel, and what are their corresponding channel names?",
                    "10. Which videos have the highest number of comments, and what are their corresponding channel names?"
                    ]
-
+       
         selected_questions = st.multiselect("Select questions to execute", questions)
         if st.button("Run Selected Queries"):
 
